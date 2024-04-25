@@ -1,0 +1,98 @@
+#include <iostream>
+#include <vector>
+#include <omp.h>
+
+using namespace std;
+
+// TreeNode struct represents a node in a binary tree
+struct TreeNode
+{
+    int val;
+    TreeNode *left;
+    TreeNode *right;
+
+    // Default constructor for TreeNode
+    TreeNode() : val(0), left(nullptr), right(nullptr) {}
+
+    // Constructor with a value parameter for TreeNode
+    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+
+    // Constructor with value, left child, and right child parameters for TreeNode
+    TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+};
+
+class Solution
+{
+public:
+    // Parallel DFS
+    vector<int> parallelDFS(TreeNode *root)
+    {
+        vector<int> result;
+
+#pragma omp parallel sections
+        {
+
+#pragma omp section
+            {
+                dfs(root->left, result);
+            }
+
+#pragma omp section
+            {
+                result.push_back(root->val);
+            }
+
+#pragma omp section
+            {
+                dfs(root->right, result);
+            }
+        }
+
+        return result;
+    }
+
+public:
+    // Helper function for DFS
+    void dfs(TreeNode *node, vector<int> &result)
+    {
+        if (node == nullptr)
+            return;
+
+        dfs(node->left, result);
+        result.push_back(node->val);
+        dfs(node->right, result);
+    }
+};
+
+// Main function
+int main()
+{
+    // Creating a sample binary tree
+    TreeNode *root = new TreeNode(1);
+    root->left = new TreeNode(2);
+    root->right = new TreeNode(3);
+    root->left->left = new TreeNode(4);
+    root->left->right = new TreeNode(5);
+
+    // Create an instance of the Solution class
+    Solution solution;
+    vector<int> result;
+    solution.dfs(root, result);
+
+    for (int val : result)
+    {
+        cout << val << " ";
+    }
+    cout << endl;
+
+    // Parallel DFS
+    cout << "Parallel DFS:" << endl;
+    vector<int> parallelResult = solution.parallelDFS(root);
+    for (int val : parallelResult)
+    {
+        cout << val << " ";
+    }
+    cout << endl;
+
+    return 0;
+}
